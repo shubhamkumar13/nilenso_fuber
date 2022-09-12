@@ -1,3 +1,5 @@
+use rand::prelude::*;
+
 #[derive(Debug, Clone)]
 enum Entity {
     Cab,
@@ -9,6 +11,7 @@ enum State {
     Assigned(Entity),
     Unassigned,
 }
+
 #[derive(Debug, Clone)]
 struct Point {
     x: i64,
@@ -23,6 +26,29 @@ impl Point {
         Point { x: t.0, y: t.1 }
     }
 }
+
+#[derive(Debug, Clone)]
+struct Points(Vec<Point>);
+
+impl Points {
+    fn new(n: usize) -> Self {
+        let mut rng = rand::thread_rng();
+
+        let mut x_coords: Vec<usize> = (0..n).collect();
+        let mut y_coords: Vec<usize> = (0..n).collect();
+        x_coords.shuffle(&mut rng);
+        y_coords.shuffle(&mut rng);
+
+        Points(
+            x_coords
+                .iter()
+                .zip(y_coords.iter())
+                .map(|(&a, &b)| Point::fromTuple((a as i64, b as i64)))
+                .collect(),
+        )
+    }
+}
+
 #[derive(Debug, Clone)]
 struct Cab {
     id: usize,
@@ -46,6 +72,23 @@ impl Cab {
         unimplemented!()
     }
 }
+
+#[derive(Debug, Clone)]
+struct Fleet(Vec<Cab>);
+
+impl Fleet {
+    fn new(n: usize) -> Self {
+        let points = Points::new(n).0;
+        Fleet(
+            points
+                .iter()
+                .enumerate()
+                .map(|(i, ival)| Cab::new(i, ival.clone(), State::Unassigned))
+                .collect::<Vec<Cab>>(),
+        )
+    }
+}
+
 #[derive(Debug, Clone)]
 struct Person {
     id: i64,
