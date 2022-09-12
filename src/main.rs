@@ -1,15 +1,10 @@
 use rand::prelude::*;
 
-#[derive(Debug, Clone)]
-enum Entity {
-    Cab,
-    Person,
-}
-
-#[derive(Debug, Clone)]
-enum State {
-    Assigned(Entity),
-    Unassigned,
+fn main() {
+    let mut cabs = Fleet::new(1000).0;
+    let cab1 = &cabs[0];
+    let cab2 = &cabs[1];
+    println!("{:#?}. {:#?}", cab1, cab2);
 }
 
 #[derive(Debug, Clone)]
@@ -24,6 +19,11 @@ impl Point {
     }
     fn fromTuple(t: (i64, i64)) -> Self {
         Point { x: t.0, y: t.1 }
+    }
+    fn dist(&self, p: Point) -> f64 {
+        let x_sq = (self.x - p.x) * (self.x - p.x);
+        let y_sq = (self.y - p.y) * (self.y - p.y);
+        ((x_sq + y_sq) as f64).sqrt()
     }
 }
 
@@ -53,23 +53,18 @@ impl Points {
 struct Cab {
     id: usize,
     location: Point,
-    state: State,
-    distance_to_person: Option<usize>,
-    distance_to_destination: Option<usize>,
+    state: Option<Box<Person>>,
+    destination: Option<Point>,
 }
 
 impl Cab {
-    fn new(id: usize, location: Point, state: State) -> Self {
+    fn new(id: usize, location: Point) -> Self {
         Cab {
             id,
             location,
-            state,
-            distance_to_person: None,
-            distance_to_destination: None,
+            state: None,
+            destination: None,
         }
-    }
-    fn assign_person(&mut self, person: Person) -> () {
-        unimplemented!()
     }
 }
 
@@ -83,9 +78,17 @@ impl Fleet {
             points
                 .iter()
                 .enumerate()
-                .map(|(i, ival)| Cab::new(i, ival.clone(), State::Unassigned))
+                .map(|(i, ival)| Cab::new(i, ival.clone()))
                 .collect::<Vec<Cab>>(),
         )
+    }
+
+    fn to_vec(self) -> Vec<Cab> {
+        self.0
+    }
+
+    fn from_vec(v: Vec<Cab>) -> Fleet {
+        Fleet(v)
     }
 }
 
@@ -93,20 +96,17 @@ impl Fleet {
 struct Person {
     id: i64,
     location: Point,
-    state: State,
+    state: Option<Box<Cab>>,
     destination: Point,
 }
 
 impl Person {
-    fn new(id: i64, location: Point, state: State, destination: Point) -> Self {
+    fn new(id: i64, location: Point, destination: Point) -> Self {
         Person {
             id,
             location,
-            state,
+            state: None,
             destination,
         }
-    }
-    fn assign_cab(&mut self, cab: Cab) {
-        unimplemented!()
     }
 }
