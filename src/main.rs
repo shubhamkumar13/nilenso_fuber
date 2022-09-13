@@ -10,10 +10,6 @@ fn main() {
     println!("{:#?}", fleet);
 }
 
-fn create_random_points(n: usize) -> Vec<Point> {
-    (0..n).map(|_| Point::create_random_point()).collect()
-}
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Point {
     x: i64,
@@ -38,6 +34,22 @@ impl Point {
         let y = rand::random::<i8>() as i64;
         Point::new(x, y)
     }
+
+    fn create_random_points(n: usize) -> Vec<Self> {
+        (0..n).map(|_| Point::create_random_point()).collect()
+    }
+
+    fn nearest_point(&self, p1: Point, p2: Point) -> Point {
+        let d1 = self.dist(&p1);
+        let d2 = self.dist(&p2);
+        if d1 < d2 {
+            p1
+        } else if d1 > d2 {
+            p2
+        } else {
+            p1
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -58,6 +70,10 @@ impl Cab {
 
     fn update_destination(&mut self, destination: Point) {
         self.destination = Some(destination);
+    }
+
+    fn get_location(&self) -> Point {
+        self.location.clone()
     }
 }
 
@@ -83,6 +99,14 @@ impl Person {
             Some(c) => Ok(c),
         }
     }
+
+    fn get_location(&self) -> Point {
+        self.location.clone()
+    }
+
+    fn get_destination(&self) -> Point {
+        self.destination.clone()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -91,7 +115,7 @@ struct Fleet(HashMap<Cab, Option<Person>>);
 impl Fleet {
     fn new(n: usize) -> Self {
         let mut hmap: HashMap<Cab, Option<Person>> = HashMap::with_capacity(n);
-        let points: Vec<Point> = create_random_points(n);
+        let points: Vec<Point> = Point::create_random_points(n);
 
         let cabs: Vec<Cab> = points
             .into_iter()
@@ -106,21 +130,25 @@ impl Fleet {
         Fleet(hmap)
     }
 
+    fn nearest_cab(&self, person: &Person, cab1: &Cab, cab2: &Cab) -> Cab {
+        let d = person
+            .get_location()
+            .nearest_point(cab1.get_location(), cab2.get_location());
+
+        if d == cab1.location {
+            cab1.clone()
+        } else {
+            cab2.clone()
+        }
+    }
+
     fn add_person(&mut self, p: Person) -> Option<Cab> {
         let hmap = self.clone().0;
 
-        let nearest_cab_to_p = hmap.into_iter().filter(|x| x.1.is_none()).reduce(|x, y| {
-            let d1: f64 = x.0.location.dist(&p.location);
-            let d2: f64 = y.0.location.dist(&p.location);
-
-            if d1 < d2 {
-                x
-            } else if d1 > d2 {
-                y
-            } else {
-                x
-            }
-        });
+        let nearest_cab_to_p = hmap
+            .into_iter()
+            .filter(|x| x.1.is_none())
+            .reduce(|x, y| (self.nearest_cab(&p, &x.0, &y.0), None));
 
         match nearest_cab_to_p {
             None => None,
