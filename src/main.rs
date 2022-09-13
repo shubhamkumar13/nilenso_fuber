@@ -1,33 +1,17 @@
-use rand::prelude::*;
-
-const INF: f64 = f64::INFINITY;
+use rand;
+use std::collections::HashMap;
 
 fn main() {
-    let mut fleet = Fleet::new(10);
-    // // let mut cab1 = &fleet[0];
-    // // let mut cab2 = &fleet[1];
-    // println!("{:#?}. {:#?}", cab1, cab2);
+    let mut fleet = Fleet::new(3);
+    let person1 = Person::new(0, Point::new(0, 0), Point::new(100, 100));
+    if let Ok(cab) = person1.request_cab(&mut fleet) {
+        println!("{:#?}", cab);
+    }
     println!("{:#?}", fleet);
 }
 
 fn create_random_points(n: usize) -> Vec<Point> {
-    let mut rng = rand::thread_rng();
-
-    let mut x_coords: Vec<usize> = (0..n).collect();
-    let mut y_coords: Vec<usize> = (0..n).collect();
-    x_coords.shuffle(&mut rng);
-    y_coords.shuffle(&mut rng);
-
-    x_coords
-        .iter()
-        .zip(y_coords.iter())
-        .map(|(&a, &b)| Point::fromTuple((a as i64, b as i64)))
-        .collect()
-}
-
-enum Message {
-    Success,
-    Failure,
+    (0..n).map(|_| Point::create_random_point()).collect()
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -48,9 +32,15 @@ impl Point {
         let y_sq = (self.y - p.y) * (self.y - p.y);
         ((x_sq + y_sq) as f64).sqrt()
     }
+
+    fn create_random_point() -> Self {
+        let x = rand::random::<i8>() as i64;
+        let y = rand::random::<i8>() as i64;
+        Point::new(x, y)
+    }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Cab {
     id: usize,
     location: Point,
@@ -66,8 +56,8 @@ impl Cab {
         }
     }
 
-    fn is_assigned(&self, fleet: Fleet) -> Result<Message, String> {
-        fleet.is_cab_assigned(*self)
+    fn update_destination(&mut self, destination: Point) {
+        self.destination = Some(destination);
     }
 }
 
@@ -87,60 +77,60 @@ impl Person {
         }
     }
 
-    fn request_cab(&self, fleet: &mut Fleet) -> Message {
-        unimplemented!()
-    }
-}
-
-#[derive(Debug, Clone)]
-struct Entity(Cab, Option<Person>);
-
-impl Entity {
-    fn new(cab: Cab) -> Self {
-        Entity(cab, None)
-    }
-
-    fn assign_person(&mut self, person: Person) -> Message {
-        match self.1 {
-            None => {
-                self.1 = Some(person);
-                Message::Success
-            }
-            Some(_) => Message::Failure,
-        }
-    }
-
-    fn is_cab_assigned(&self, cab: Cab) -> Message {
-        if self.0.id == cab.id {
-            Message::Success
-        } else {
-            Message::Failure
+    fn request_cab(&self, fleet: &mut Fleet) -> Result<Cab, String> {
+        match fleet.add_person(self.clone()) {
+            None => Err("No cabs available right now".to_string()),
+            Some(c) => Ok(c),
         }
     }
 }
 
 #[derive(Debug, Clone)]
-struct Fleet(Vec<Entity>);
+struct Fleet(HashMap<Cab, Option<Person>>);
 
 impl Fleet {
     fn new(n: usize) -> Self {
-        let points = create_random_points(n);
-        Fleet(
-            points
-                .iter()
-                .enumerate()
-                .map(|(i, ival)| Entity(Cab::new(i, ival.clone()), None))
-                .collect(),
-        )
+        let mut hmap: HashMap<Cab, Option<Person>> = HashMap::with_capacity(n);
+        let points: Vec<Point> = create_random_points(n);
+
+        let cabs: Vec<Cab> = points
+            .into_iter()
+            .enumerate()
+            .map(|x| Cab::new(x.0, x.1))
+            .collect();
+
+        cabs.into_iter().for_each(|x| match hmap.insert(x, None) {
+            _ => (),
+        });
+
+        Fleet(hmap)
     }
 
-    fn is_cab_assigned(&self, cab: Cab) -> Result<Message, String> {
-        if let Some(e) = self.0.iter().find(|Entity(x, _)| *x == cab) {
-            Ok((*e).is_cab_assigned(cab))
-        } else {
-            Err("The cab doesn't exist".to_string())
+    fn add_person(&mut self, p: Person) -> Option<Cab> {
+        let hmap = self.clone().0;
+
+        let nearest_cab_to_p = hmap.into_iter().filter(|x| x.1.is_none()).reduce(|x, y| {
+            let d1: f64 = x.0.location.dist(&p.location);
+            let d2: f64 = y.0.location.dist(&p.location);
+
+            if d1 < d2 {
+                x
+            } else if d1 > d2 {
+                y
+            } else {
+                x
+            }
+        });
+
+        match nearest_cab_to_p {
+            None => None,
+            Some((c, _)) => {
+                let mut cab = c.clone();
+                cab.update_destination(p.destination.clone());
+                let _ = self.0.remove_entry(&c);
+                let _ = self.0.insert(cab.clone(), Some(p));
+                Some(cab.clone())
+            }
         }
     }
-
-    fn assign_person(&mut self, person : Person) 
 }
