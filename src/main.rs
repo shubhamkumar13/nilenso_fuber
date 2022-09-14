@@ -100,6 +100,14 @@ impl Person {
         }
     }
 
+    fn remove_cab(&self, fleet: &mut Fleet) -> Result<(), String> {
+        fleet.remove_person(self)
+    }
+
+    fn get_id(&self) -> i64 {
+        self.id.clone()
+    }
+
     fn get_location(&self) -> Point {
         self.location.clone()
     }
@@ -123,8 +131,9 @@ impl Fleet {
             .map(|x| Cab::new(x.0, x.1))
             .collect();
 
-        cabs.into_iter().for_each(|x| match hmap.insert(x, None) {
-            _ => (),
+        cabs.into_iter().for_each(|x| {
+            let _ = hmap.entry(x).or_default();
+            ()
         });
 
         Fleet(hmap)
@@ -143,6 +152,7 @@ impl Fleet {
         new_cab.clone()
     }
 
+    fn nearest_of_2_cabs(&self, person: &Person, cab1: &Cab, cab2: &Cab) -> Cab {
         let d = person
             .get_location()
             .nearest_point(cab1.get_location(), cab2.get_location());
@@ -160,7 +170,7 @@ impl Fleet {
         let nearest_cab_to_p = hmap
             .into_iter()
             .filter(|x| x.1.is_none())
-            .reduce(|x, y| (self.nearest_cab(&p, &x.0, &y.0), None));
+            .reduce(|x, y| (self.nearest_of_2_cabs(&p, &x.0, &y.0), None));
 
         match nearest_cab_to_p {
             None => None,
