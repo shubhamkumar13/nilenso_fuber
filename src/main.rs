@@ -170,6 +170,30 @@ impl Fleet {
             }
         }
     }
+
+    fn remove_person(&mut self, person: &Person) -> Result<(), String> {
+        let hmap = self.clone().0;
+
+        let field = hmap.into_iter().fold(None, |_, x| match &x.1 {
+            None => None,
+            Some(p) => {
+                if *p == *person {
+                    Some(x)
+                } else {
+                    None
+                }
+            }
+        });
+
+        match field {
+            None => Err(format!(
+                "Something went wrong and couldn't find the Person with id : {} in our fleet",
+                person.get_id()
+            )),
+
+            Some((c, _)) => {
+                self.cab_to_none(c);
+                Ok(())
             }
         }
     }
