@@ -77,7 +77,7 @@ impl Cab {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Person {
     id: i64,
     location: Point,
