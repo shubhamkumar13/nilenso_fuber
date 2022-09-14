@@ -130,7 +130,19 @@ impl Fleet {
         Fleet(hmap)
     }
 
-    fn nearest_cab(&self, person: &Person, cab1: &Cab, cab2: &Cab) -> Cab {
+    fn cab_to_none(&mut self, c: Cab) {
+        let _ = self.0.insert(c, None);
+        ()
+    }
+
+    fn cab_to_some_person(&mut self, cab: Cab, p: Person) -> Cab {
+        let mut new_cab = cab.clone();
+        new_cab.update_destination(p.destination.clone());
+        let _ = self.0.remove_entry(&cab);
+        let _ = self.0.insert(new_cab.clone(), Some(p));
+        new_cab.clone()
+    }
+
         let d = person
             .get_location()
             .nearest_point(cab1.get_location(), cab2.get_location());
