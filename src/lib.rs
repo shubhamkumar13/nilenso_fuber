@@ -108,12 +108,16 @@ impl Cab {
         }
     }
 
-    fn update_destination(&mut self, destination: Point) {
-        self.destination = Some(destination);
+    fn update_destination(&mut self, destination: Option<Point>) {
+        self.destination = destination;
     }
 
     pub fn get_location(&self) -> Point {
         self.location.clone()
+    }
+
+    fn update_location(&mut self, location: Point) {
+        self.location = location
     }
 }
 
@@ -145,8 +149,8 @@ impl Person {
     }
 
     // this also has a Result type return value just to make the error message
-    // clearer
-    pub fn remove_cab(&self, fleet: &mut Fleet) -> Result<(), String> {
+    // clearer, it returns unit if everything goes right
+    pub fn remove_cab(&self, fleet: &mut Fleet) -> Result<Cab, String> {
         fleet.remove_person(self)
     }
 
@@ -200,16 +204,46 @@ impl Fleet {
         self.0.clone()
     }
 
-    // deallocate a person instance from a cab instance in the fleet
-    fn cab_to_none(&mut self, c: Cab) {
-        let _ = self.0.insert(c, None);
-        ()
+    fn get_tuple_by_person(&self, p: &Person) -> Result<(Cab, Option<Person>), String> {
+        let hmap = self.0.clone().into_iter();
+
+        for (k, v) in hmap {
+            match v.clone() {
+                None => continue,
+                Some(person) => {
+                    if person == *p {
+                        return Ok((k, v));
+                    }
+                }
+            }
+        }
+
+        return Err(format!(
+            "Cannot find person {} in the fleet (outside loop)",
+            p.get_id()
+        ));
+    }
+
+    fn get_tuple_by_cab(&self, c: &Cab) -> Result<(Cab, Option<Person>), String> {
+        unimplemented!()
+    }
+
+    // deallocate a person instance from a cab instance in the fleet and set
+    // the new location of the cab which should be the destination where the
+    // person is deallocated
+    // TODO : FIX TEST ERROR
+    fn cab_to_none(&mut self, cab: Cab, new_location: Point) -> Cab {
+        let mut new_cab = cab.clone();
+        new_cab.update_location(new_location);
+        new_cab.update_destination(None);
+        let _ = self.0.insert(new_cab.clone(), None);
+        new_cab
     }
 
     // allocate a person instance to a cab instance in the fleet
     fn cab_to_some_person(&mut self, cab: Cab, p: Person) -> Cab {
         let mut new_cab = cab.clone();
-        new_cab.update_destination(p.destination.clone());
+        new_cab.update_destination(Some(p.location.clone()));
         let _ = self.0.remove_entry(&cab);
         let _ = self.0.insert(new_cab.clone(), Some(p));
         new_cab.clone()
@@ -243,44 +277,36 @@ impl Fleet {
         match nearest_cab_to_p {
             None => None,
             Some((c, _)) => {
-                let update_cab = self.cab_to_some_person(c, p);
-                Some(update_cab)
+                let updated_cab = self.cab_to_some_person(c, p);
+                Some(updated_cab)
             }
         }
     }
 
     // takes in the request to remove a person from the fleet if possible
     // Returns a Result type, where if a person is unassigned to a cab
-    // a unit instance is returned and if a cab isn't unassigned because
+    // a Cab instance is returned with updated location which is
+    // the current person's destination and if a cab isn't unassigned because
     // of some unknowable reason a error message is returned.
-    pub fn remove_person(&mut self, person: &Person) -> Result<(), String> {
-        let hmap = self.clone().0;
-
+    pub fn remove_person(&mut self, person: &Person) -> Result<Cab, String> {
         // get the field which contains the cab -> person mapping
         // which needs to be removed
-        let field = hmap.into_iter().fold(None, |_, x| match &x.1 {
-            None => None,
-            Some(p) => {
-                if *p == *person {
-                    Some(x)
-                } else {
-                    None
-                }
-            }
-        });
+        let field = self.get_tuple_by_person(person);
 
         // most probably because the person wasn't assigned at first so it
         // cannot be removed
         match field {
-            None => Err(format!(
-                "Something went wrong and couldn't find the Person with id : {} in our fleet",
-                person.get_id()
+            Err(s) => Err(format!(
+                "{}\nThis error happened inside [Fleet::remove_person(..)] -> field pattern match -> Err arm\n",
+                s
             )),
 
-            Some((c, _)) => {
-                self.cab_to_none(c);
-                Ok(())
-            }
+            Ok((c, p)) => match p {
+                None => Err(format!(
+                    "Expected Some(Person) found None\nThis error happened inside [Fleet::remove_person(..)] -> field pattern match -> Ok (..) arm\n"
+                )),
+                Some(p) => Ok(self.cab_to_none(c, p.get_destination())),
+            },
         }
     }
 }
