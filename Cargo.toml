@@ -3,7 +3,13 @@ name = "fuber"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "fuber"
+path = "src/lib.rs"
 
 [dependencies]
 rand = "0.8.5"
+
+[[bin]]
+name = "fuber"
+path = "src/main.rs"
