@@ -165,11 +165,11 @@ impl Fleet {
         match nearest_cab_to_p {
             None => None,
             Some((c, _)) => {
-                let mut cab = c.clone();
-                cab.update_destination(p.destination.clone());
-                let _ = self.0.remove_entry(&c);
-                let _ = self.0.insert(cab.clone(), Some(p));
-                Some(cab.clone())
+                let update_cab = self.cab_to_some_person(c, p);
+                Some(update_cab)
+            }
+        }
+    }
             }
         }
     }
