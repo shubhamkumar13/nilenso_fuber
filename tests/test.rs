@@ -60,6 +60,8 @@ fn test_remove_person_after_reaching_destination() {
 #[should_panic]
 fn test_failure_when_all_cabs_occupied() {
     let mut fleet = Fleet::new(3);
+
+    // simulate the occupied people
     let person_vec: Vec<Person> = {
         let loc_points: Vec<Point> = Point::create_random_points(3);
         let dest_points: Vec<Point> = Point::create_random_points(3);
@@ -72,6 +74,7 @@ fn test_failure_when_all_cabs_occupied() {
             .collect()
     };
 
+    // add the respective people to their respective cabs
     let _ = {
         person_vec
             .iter()
@@ -82,6 +85,7 @@ fn test_failure_when_all_cabs_occupied() {
             .collect::<Vec<Cab>>()
     };
 
+    // when a new person is added the assertion always results in an error
     let new_person = Person::new(0, Point::new(0, 0), Point::new(100, 100));
 
     assert!(new_person.request_cab(&mut fleet).is_ok())
