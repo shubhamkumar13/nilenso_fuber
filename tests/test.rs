@@ -33,19 +33,18 @@ fn test_get_nearest_cab() {
     }
 }
 
+// test to check if the location of the cab is the same as the destination
+// of the person when fleet removes the person from the cab
+// which should happen only when the person reaches the destination
 #[test]
 fn test_remove_person_after_reaching_destination() {
     let mut fleet = Fleet::new(3);
     let person1 = Person::new(0, Point::new(0, 0), Point::new(100, 100));
 
-    println!("before request {:#?}", fleet);
-
     let cab = match person1.request_cab(&mut fleet) {
         Ok(cab) => cab,
         Err(s) => panic!("{}", s),
     };
-
-    println!("after request {:#?}", fleet);
 
     match person1.remove_cab(&mut fleet) {
         Ok(updated_cab) => {
@@ -53,6 +52,4 @@ fn test_remove_person_after_reaching_destination() {
         }
         Err(s) => panic!("{}", s),
     }
-
-    println!("after removal {:#?}", fleet);
 }
