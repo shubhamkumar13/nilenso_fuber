@@ -54,6 +54,8 @@ fn test_remove_person_after_reaching_destination() {
     }
 }
 
+// test that should panic because when a new person is trying to request cab
+// it should throw an error because it is unable to find an empty cab
 #[test]
 #[should_panic]
 fn test_failure_when_all_cabs_occupied() {
@@ -82,5 +84,5 @@ fn test_failure_when_all_cabs_occupied() {
 
     let new_person = Person::new(0, Point::new(0, 0), Point::new(100, 100));
 
-    assert_eq!(new_person.request_cab(&mut fleet).is_ok(), true)
+    assert!(new_person.request_cab(&mut fleet).is_ok())
 }
