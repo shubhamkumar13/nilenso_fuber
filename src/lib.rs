@@ -68,7 +68,7 @@ impl Point {
         Point::new(x, y)
     }
 
-    fn create_random_points(n: usize) -> Vec<Self> {
+    pub fn create_random_points(n: usize) -> Vec<Self> {
         (0..n).map(|_| Point::create_random_point()).collect()
     }
 
@@ -124,7 +124,7 @@ impl Cab {
 // Very similar struct for Person and Cab which can be generalized further
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Person {
-    id: i64,
+    id: usize,
     location: Point,
     destination: Point,
 }
@@ -132,7 +132,7 @@ pub struct Person {
 // all the methods are public because we want the Person instance
 // to access all it's methods and not Fleet or Cab's
 impl Person {
-    pub fn new(id: i64, location: Point, destination: Point) -> Self {
+    pub fn new(id: usize, location: Point, destination: Point) -> Self {
         Person {
             id,
             location,
@@ -154,7 +154,7 @@ impl Person {
         fleet.remove_person(self)
     }
 
-    pub fn get_id(&self) -> i64 {
+    pub fn get_id(&self) -> usize {
         self.id.clone()
     }
 

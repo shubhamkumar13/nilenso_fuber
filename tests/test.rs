@@ -53,3 +53,34 @@ fn test_remove_person_after_reaching_destination() {
         Err(s) => panic!("{}", s),
     }
 }
+
+#[test]
+#[should_panic]
+fn test_failure_when_all_cabs_occupied() {
+    let mut fleet = Fleet::new(3);
+    let person_vec: Vec<Person> = {
+        let loc_points: Vec<Point> = Point::create_random_points(3);
+        let dest_points: Vec<Point> = Point::create_random_points(3);
+
+        loc_points
+            .into_iter()
+            .zip(dest_points.into_iter())
+            .enumerate()
+            .map(|x| Person::new(x.0, x.1 .0, x.1 .1))
+            .collect()
+    };
+
+    let _ = {
+        person_vec
+            .iter()
+            .filter_map(|p| match (*p).request_cab(&mut fleet) {
+                Ok(cab) => Some(cab),
+                Err(_) => None,
+            })
+            .collect::<Vec<Cab>>()
+    };
+
+    let new_person = Person::new(0, Point::new(0, 0), Point::new(100, 100));
+
+    assert_eq!(new_person.request_cab(&mut fleet).is_ok(), true)
+}
