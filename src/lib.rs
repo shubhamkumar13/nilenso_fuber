@@ -150,7 +150,7 @@ impl Person {
 
     // this also has a Result type return value just to make the error message
     // clearer, it returns unit if everything goes right
-    pub fn remove_cab(&self, fleet: &mut Fleet) -> Result<Cab, String> {
+    pub fn end_cab_ride(&self, fleet: &mut Fleet) -> Result<Cab, String> {
         fleet.remove_person(self)
     }
 

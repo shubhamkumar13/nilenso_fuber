@@ -46,7 +46,7 @@ fn test_remove_person_after_reaching_destination() {
         Err(s) => panic!("{}", s),
     };
 
-    match person1.remove_cab(&mut fleet) {
+    match person1.end_cab_ride(&mut fleet) {
         Ok(updated_cab) => {
             assert_eq!(updated_cab.get_location(), person1.get_destination());
         }
