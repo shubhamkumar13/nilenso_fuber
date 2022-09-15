@@ -218,10 +218,7 @@ impl Fleet {
             }
         }
 
-        return Err(format!(
-            "Cannot find person {} in the fleet (outside loop)",
-            p.get_id()
-        ));
+        return Err(format!("Cannot find person {} in the fleet", p.get_id()));
     }
 
     fn get_tuple_by_cab(&self, c: &Cab) -> Result<(Cab, Option<Person>), String> {
@@ -231,11 +228,11 @@ impl Fleet {
     // deallocate a person instance from a cab instance in the fleet and set
     // the new location of the cab which should be the destination where the
     // person is deallocated
-    // TODO : FIX TEST ERROR
     fn cab_to_none(&mut self, cab: Cab, new_location: Point) -> Cab {
         let mut new_cab = cab.clone();
         new_cab.update_location(new_location);
         new_cab.update_destination(None);
+        let _ = self.0.remove_entry(&cab);
         let _ = self.0.insert(new_cab.clone(), None);
         new_cab
     }
