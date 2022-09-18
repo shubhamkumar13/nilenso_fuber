@@ -1,4 +1,6 @@
 use rand;
+use rocket::UriDisplayPath;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 // A TL;DR for non-rust users what #[derive(Debug, CLone, PartialEq ...)] does :
@@ -41,7 +43,7 @@ use std::collections::HashMap;
 // Reference : https://doc.rust-lang.org/std/hash/trait.Hash.html
 
 // Point struct to abstract the nitty gritty stuff for locations
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Point {
     x: i64,
     y: i64,
@@ -62,7 +64,7 @@ impl Point {
         ((x_sq + y_sq) as f64).sqrt()
     }
 
-    fn create_random_point() -> Self {
+    pub fn create_random_point() -> Self {
         let x = rand::random::<i8>() as i64;
         let y = rand::random::<i8>() as i64;
         Point::new(x, y)
@@ -89,7 +91,7 @@ impl Point {
 }
 
 // Struct Cab to encapsulate what info a cab should be have
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Cab {
     id: usize,
     location: Point,
@@ -122,7 +124,7 @@ impl Cab {
 }
 
 // Very similar struct for Person and Cab which can be generalized further
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Person {
     id: usize,
     location: Point,
