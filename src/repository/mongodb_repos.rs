@@ -7,6 +7,7 @@ use mongodb::{
     results::{DeleteResult, InsertManyResult, InsertOneResult, UpdateResult},
     sync::{Client, Collection},
 };
+use rocket::serde::json::Json;
 
 use crate::models::{cab_model::Cab, person_model::Person, point_model::Point};
 
@@ -67,6 +68,23 @@ impl MongoRepo {
         }
     }
 
+    pub fn get_cab(&self, id: &String) -> Result<Cab, Error> {
+        match ObjectId::parse_str(id) {
+            Ok(obj_id) => {
+                let filter = doc! {"_id": obj_id};
+                Ok(self
+                    .cabs
+                    .find_one(filter, None)
+                    .ok()
+                    .expect("Error getting person's detail")
+                    .unwrap())
+            }
+            Err(_) => Err(Error::DeserializationError {
+                message: "Error while parsing person object".to_string(),
+            }),
+        }
+    }
+
     pub fn create_cab(&self, new_cab: Cab) -> Result<InsertOneResult, Error> {
         let new_entry = new_cab.clone();
 
@@ -91,13 +109,18 @@ impl MongoRepo {
         Ok(cabs)
     }
 
-    pub fn assign_cab(
-        &self,
-        person_id: &String,
-        cab_id: &String,
-        person: Person,
-        cab: Cab,
-    ) -> Result<UpdateResult, Error> {
+    pub fn get_fleet(&self) -> Result<Vec<Cab>, Error> {
+        Ok(self
+            .cabs
+            .find(None, None)
+            .ok()
+            .expect("Error getting the fleet")
+            .filter(|x| (*x).is_ok())
+            .map(|x| x.unwrap())
+            .collect::<Vec<Cab>>())
+    }
+
+    pub fn assign_person(&self, cab_id: &String, new_cab: Cab) -> Result<UpdateResult, Error> {
         unimplemented!()
     }
 }

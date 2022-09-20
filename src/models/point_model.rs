@@ -35,15 +35,15 @@ impl Point {
     // access the nearest point from p1 or p2
     // for eq. if p = (0, 0) and p1 = (1, 2), p2 = (3, 4)
     // p1 is nearer to p and the return value
-    pub fn nearest_point(&self, p1: Point, p2: Point) -> Point {
-        let d1 = self.dist(&p1);
-        let d2 = self.dist(&p2);
+    pub fn nearest_point(&self, p1: &Point, p2: &Point) -> Point {
+        let d1 = self.dist(p1);
+        let d2 = self.dist(p2);
         if d1 < d2 {
-            p1
+            p1.clone()
         } else if d1 > d2 {
-            p2
+            p2.clone()
         } else {
-            p1
+            p1.clone()
         }
     }
 }

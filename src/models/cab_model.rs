@@ -17,12 +17,20 @@ pub struct Cab {
 // library using the pub keyword, updating destination is not public
 // because we don't want the Cab instance outside library to change it.
 impl Cab {
-    pub fn new(id: Option<ObjectId>, location: Point) -> Self {
+    pub fn new(location: Point) -> Self {
         Cab {
-            id,
+            id: None,
             location,
             destination: None,
             person_id: None,
         }
+    }
+
+    pub fn update_destination(&mut self, destination: Point) {
+        self.destination = Some(destination);
+    }
+
+    pub fn update_person_id(&mut self, id: Option<ObjectId>) {
+        self.person_id = id;
     }
 }

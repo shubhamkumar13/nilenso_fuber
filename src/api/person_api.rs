@@ -3,6 +3,7 @@ use crate::{
 };
 
 use mongodb::{
+    bson::from_bson,
     bson::oid::ObjectId,
     results::{InsertManyResult, InsertOneResult},
 };
@@ -42,4 +43,9 @@ pub fn get_person(db: &State<MongoRepo>, path: String) -> Result<Json<Person>, S
             Err(_) => Err(Status::InternalServerError),
         }
     }
+}
+
+#[get("/request_cab/<person_id>")]
+pub fn assign_cab(db: &State<MongoRepo>, person_id: String) -> Result<Json<(Person, Cab)>, Status> {
+    unimplemented!()
 }
