@@ -1,7 +1,16 @@
 use rand;
+use rand::{distributions::Alphanumeric, Rng};
 use rocket::UriDisplayPath;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+pub fn generate_random_string() -> String {
+    rand::thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(7)
+        .map(char::from)
+        .collect()
+}
 
 // A TL;DR for non-rust users what #[derive(Debug, CLone, PartialEq ...)] does :
 
@@ -127,6 +136,7 @@ impl Cab {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Person {
     id: usize,
+    name: String,
     location: Point,
     destination: Point,
 }
@@ -134,9 +144,10 @@ pub struct Person {
 // all the methods are public because we want the Person instance
 // to access all it's methods and not Fleet or Cab's
 impl Person {
-    pub fn new(id: usize, location: Point, destination: Point) -> Self {
+    pub fn new(id: usize, name: String, location: Point, destination: Point) -> Self {
         Person {
             id,
+            name,
             location,
             destination,
         }
