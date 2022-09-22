@@ -26,8 +26,12 @@ impl Cab {
         }
     }
 
-    pub fn update_destination(&mut self, destination: Point) {
-        self.destination = Some(destination);
+    pub fn update_location(&mut self, location: Point) {
+        self.location = location;
+    }
+
+    pub fn update_destination(&mut self, destination: Option<Point>) {
+        self.destination = destination;
     }
 
     pub fn update_person_id(&mut self, id: Option<ObjectId>) {

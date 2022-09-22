@@ -121,6 +121,69 @@ impl MongoRepo {
     }
 
     pub fn assign_person(&self, cab_id: &String, new_cab: Cab) -> Result<UpdateResult, Error> {
-        unimplemented!()
+        match ObjectId::parse_str(cab_id) {
+            Ok(obj_id) => {
+                let filter = doc! { "_id" : obj_id};
+                let new_doc = doc! {
+                    "$set":
+                    {
+                        "id": new_cab.id,
+                        "location" : {
+                            "x" : new_cab.location.x,
+                            "y" : new_cab.location.y
+                        },
+                        "destination" : {
+                            "x" : new_cab
+                                    .destination
+                                    .clone()
+                                    .expect("cannot get the destination for this cab")
+                                    .x,
+                            "y" : new_cab
+                                    .destination
+                                    .clone()
+                                    .expect("cannot get the destination for this cab")
+                                    .y,
+                        },
+                        "person_id" : new_cab.person_id,
+                    },
+                };
+                let updated_doc = self
+                    .cabs
+                    .update_one(filter, new_doc, None)
+                    .ok()
+                    .expect("cannot update the new cab");
+
+                Ok(updated_doc)
+            }
+            Err(_) => panic!("assigning person failed"),
+        }
+    }
+
+    pub fn unassign_person(&self, cab_id: &String, new_cab: Cab) -> Result<UpdateResult, Error> {
+        match ObjectId::parse_str(cab_id) {
+            Ok(obj_id) => {
+                let filter = doc! { "_id" : obj_id};
+                let new_doc = doc! {
+                    "$set":
+                    {
+                        "id": new_cab.id,
+                        "location" : {
+                            "x" : new_cab.location.x,
+                            "y" : new_cab.location.y
+                        },
+                        "destination" : null,
+                        "person_id" : null
+                    },
+                };
+                let updated_doc = self
+                    .cabs
+                    .update_one(filter, new_doc, None)
+                    .ok()
+                    .expect("cannot update the new cab");
+
+                Ok(updated_doc)
+            }
+            Err(_) => panic!("unassign person failed"),
+        }
     }
 }

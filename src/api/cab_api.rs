@@ -78,7 +78,7 @@ pub fn assign_person(
         let person = db
             .get_person(&person_id)
             .expect("Cannot find the person in the db");
-        cab.update_destination(person.destination);
+        cab.update_destination(Some(person.destination));
         cab.update_person_id(ObjectId::parse_str(&person_id).ok());
         let cab_id = cab.id.and_then(|x| Some(x.to_hex())).unwrap();
         let update_result = db.assign_person(&cab_id, cab.clone());
@@ -96,6 +96,5 @@ pub fn assign_person(
             }
             Err(_) => Err(Status::InternalServerError),
         }
-        // panic!("")
     }
 }

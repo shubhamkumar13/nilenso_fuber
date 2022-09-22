@@ -7,7 +7,7 @@ extern crate rocket;
 use repository::mongodb_repos::MongoRepo;
 
 use api::cab_api::{assign_person, create_cab, create_fleet, generate_fleet, get_cab, get_fleet};
-use api::person_api::{assign_cab, create_person, get_person, hello};
+use api::person_api::{cancel_cab, create_person, get_person, hello, request_cab};
 
 #[launch]
 fn rocket() -> _ {
@@ -15,7 +15,10 @@ fn rocket() -> _ {
     rocket::build()
         .manage(db)
         .mount("/", routes![hello])
-        .mount("/person", routes![create_person, get_person, assign_cab])
+        .mount(
+            "/person",
+            routes![create_person, get_person, request_cab, cancel_cab],
+        )
         .mount(
             "/cab",
             routes![

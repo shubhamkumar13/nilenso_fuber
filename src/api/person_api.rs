@@ -46,6 +46,93 @@ pub fn get_person(db: &State<MongoRepo>, path: String) -> Result<Json<Person>, S
 }
 
 #[get("/request_cab/<person_id>")]
-pub fn assign_cab(db: &State<MongoRepo>, person_id: String) -> Result<Json<(Person, Cab)>, Status> {
-    unimplemented!()
+pub fn request_cab(
+    db: &State<MongoRepo>,
+    person_id: String,
+) -> Result<Json<(Person, Cab)>, Status> {
+    // get person using person_id
+    let person = db
+        .get_person(&person_id)
+        .expect("Cannot get a person's detail");
+    // get fleet
+    let fleet = db.get_fleet().expect("Unable to get the fleet");
+    // find the nearest cab in the fleet from the person
+    let mut nearest_cab = fleet
+        .into_iter()
+        .reduce(|c1, c2| person.nearest_cab(&c1, &c2))
+        .and_then(|x| Some(x.clone()))
+        .expect("Unable to get the nearest cab");
+    // update cab destination and person_id
+    nearest_cab.update_destination(Some(person.location.clone()));
+    nearest_cab.update_person_id(ObjectId::parse_str(person_id).ok());
+    // update cab by using `assign_person`
+    let cab_id = match nearest_cab.id {
+        Some(obj_id) => obj_id.to_hex(),
+        None => panic!("cannot get the cab id"),
+    };
+    let update_result = db.assign_person(&cab_id, nearest_cab.clone());
+    // return result as person and cab tuple
+    match update_result {
+        Ok(update) => {
+            if update.matched_count == 1 {
+                let updated_cab_info = db.get_cab(&cab_id);
+                match updated_cab_info {
+                    Ok(cab) => Ok(Json((person, cab))),
+                    Err(_) => Err(Status::InternalServerError),
+                }
+            } else {
+                Err(Status::NotFound)
+            }
+        }
+        Err(_) => Err(Status::InternalServerError),
+    }
+}
+
+#[get("/cancel_cab/<person_id>")]
+pub fn cancel_cab(db: &State<MongoRepo>, person_id: String) -> Result<Json<(Person, Cab)>, Status> {
+    // get person using person_id
+    let person = db
+        .get_person(&person_id)
+        .expect("Cannot get a person's detail");
+    // get fleet
+    let fleet = db.get_fleet().expect("Unable to get the fleet");
+    // find the assigned cab for the person in the fleet
+    let mut assigned_cab = fleet
+        .into_iter()
+        .fold(None, |acc, x| match x.person_id {
+            Some(obj_id) => {
+                if obj_id.to_hex() == person_id {
+                    Some(x)
+                } else {
+                    None
+                }
+            }
+            None => None,
+        })
+        .expect("Unable to get the nearest cab");
+    // nullify cab destination and person_id
+    assigned_cab.update_destination(None);
+    assigned_cab.update_person_id(None);
+    assigned_cab.update_location(person.destination.clone());
+    // update cab by using `assign_person`
+    let cab_id = match assigned_cab.id {
+        Some(obj_id) => obj_id.to_hex(),
+        None => panic!("cannot get the cab id"),
+    };
+    let update_result = db.unassign_person(&cab_id, assigned_cab.clone());
+    // return result as person and cab tuple
+    match update_result {
+        Ok(update) => {
+            if update.matched_count == 1 {
+                let updated_cab_info = db.get_cab(&cab_id);
+                match updated_cab_info {
+                    Ok(cab) => Ok(Json((person, cab))),
+                    Err(_) => Err(Status::InternalServerError),
+                }
+            } else {
+                Err(Status::NotFound)
+            }
+        }
+        Err(_) => Err(Status::InternalServerError),
+    }
 }
