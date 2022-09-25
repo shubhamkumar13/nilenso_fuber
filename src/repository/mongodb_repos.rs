@@ -9,7 +9,10 @@ use mongodb::{
 };
 use rocket::serde::json::Json;
 
-use crate::models::{cab_model::Cab, person_model::Person, point_model::Point};
+use crate::{
+    api::cab_api::update_cab,
+    models::{cab_model::Cab, person_model::Person, point_model::Point},
+};
 
 pub fn hello() {
     println!("Hello from mongodb_repos.rs")
@@ -184,6 +187,166 @@ impl MongoRepo {
                 Ok(updated_doc)
             }
             Err(_) => panic!("unassign person failed"),
+        }
+    }
+
+    pub fn update_cab(&self, new_cab: Cab) -> Result<UpdateResult, Error> {
+        match new_cab.id {
+            Some(obj_id) => {
+                let filter = doc! { "_id" : obj_id };
+                match new_cab.person_id {
+                    Some(_) => {
+                        let new_doc = doc! {
+                            "$set":
+                            {
+                                "id": new_cab.id,
+                                "location" : {
+                                    "x" : new_cab.location.x,
+                                    "y" : new_cab.location.y
+                                },
+                                "destination" : {
+                                    "x" : new_cab
+                                            .destination
+                                            .clone()
+                                            .expect("cannot get the destination for this cab")
+                                            .x,
+                                    "y" : new_cab
+                                            .destination
+                                            .clone()
+                                            .expect("cannot get the destination for this cab")
+                                            .y,
+                                },
+                                "person_id" : new_cab.person_id,
+                            },
+                        };
+                        let updated_doc = self
+                            .cabs
+                            .update_one(filter, new_doc, None)
+                            .ok()
+                            .expect("cannot update the new cab");
+
+                        Ok(updated_doc)
+                    }
+                    None => {
+                        let new_doc = doc! {
+                            "$set":
+                            {
+                                "id": new_cab.id,
+                                "location" : {
+                                    "x" : new_cab.location.x,
+                                    "y" : new_cab.location.y
+                                },
+                                "destination" : null,
+                                "person_id" : null
+                            },
+                        };
+
+                        let updated_doc = self
+                            .cabs
+                            .update_one(filter, new_doc, None)
+                            .ok()
+                            .expect("cannot update the new cab");
+
+                        Ok(updated_doc)
+                    }
+                }
+            }
+            None => Err(Error::DeserializationError {
+                message: "Couldn't find the object id".to_string(),
+            }),
+        }
+    }
+
+    pub fn delete_cab(&self, cab_id: &String) -> Result<DeleteResult, Error> {
+        match ObjectId::parse_str(cab_id) {
+            Ok(obj_id) => {
+                let filter = doc! {"_id" : obj_id};
+                let deleted_doc = self.cabs.delete_one(filter, None);
+                match deleted_doc {
+                    Ok(d) => Ok(d),
+                    Err(_) => Err(Error::DeserializationError {
+                        message: "Cannot delete the cab".into(),
+                    }),
+                }
+            }
+            Err(_) => Err(Error::DeserializationError {
+                message: "Cannot find the object".to_string(),
+            }),
+        }
+    }
+
+    pub fn update_person(&self, new_person: Person) -> Result<UpdateResult, Error> {
+        match new_person.id.clone() {
+            Some(obj_id) => {
+                let filter = doc! {"_id" : obj_id};
+                let new_doc = doc! {
+                    "$set":
+                    {
+                        "id" : new_person.id,
+                        "name" : new_person.name,
+                        "location" : {
+                            "x" : new_person.location.x.clone(),
+                            "y" : new_person.location.y.clone(),
+                        },
+                        "destination" : {
+                            "x" : new_person.destination.x.clone(),
+                            "y" : new_person.destination.y.clone(),
+                        },
+                    }
+                };
+
+                let updated_doc = self.persons.update_one(filter, new_doc, None).ok();
+
+                match updated_doc {
+                    Some(update) => Ok(update),
+                    None => Err(Error::DeserializationError {
+                        message: "Cannot update the doc".into(),
+                    }),
+                }
+            }
+            None => Err(Error::DeserializationError {
+                message: "ObjectId for the person doesn't exist".into(),
+            }),
+        }
+    }
+
+    pub fn delete_person(&self, person_id: &String) -> Result<DeleteResult, Error> {
+        match ObjectId::parse_str(person_id) {
+            Ok(obj_id) => {
+                let filter = doc! {"_id" : obj_id};
+                let deleted_doc = self.persons.delete_one(filter, None);
+                match deleted_doc {
+                    Ok(d) => Ok(d),
+                    Err(_) => Err(Error::DeserializationError {
+                        message: "Cannot delete the person".into(),
+                    }),
+                }
+            }
+            Err(_) => Err(Error::DeserializationError {
+                message: "Cannot find the ObjectId for the person".to_string(),
+            }),
+        }
+    }
+
+    pub fn delete_fleet(&self) -> Result<DeleteResult, Error> {
+        let filter = doc! {};
+        let deleted_fleet_docs = self.cabs.delete_many(filter, None);
+        match deleted_fleet_docs {
+            Ok(d) => Ok(d),
+            Err(_) => Err(Error::DeserializationError {
+                message: "Cannot delete the complete fleet".into(),
+            }),
+        }
+    }
+
+    pub fn delete_all_people(&self) -> Result<DeleteResult, Error> {
+        let filter = doc! {};
+        let deleted_people_docs = self.persons.delete_many(filter, None);
+        match deleted_people_docs {
+            Ok(d) => Ok(d),
+            Err(_) => Err(Error::DeserializationError {
+                message: "Cannot delete the complete fleet".into(),
+            }),
         }
     }
 }

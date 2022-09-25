@@ -3,6 +3,7 @@ use fuber::{generate_random_string, Cab, Fleet, Person, Point};
 // test if the `request_cab` function is actually
 // getting me the nearest cab by simulating using the same thing
 // represented respectively in cab1 and cab2
+#[ignore]
 #[test]
 fn test_get_nearest_cab() {
     let mut fleet = Fleet::new(3);
@@ -41,6 +42,7 @@ fn test_get_nearest_cab() {
 // test to check if the location of the cab is the same as the destination
 // of the person when fleet removes the person from the cab
 // which should happen only when the person reaches the destination
+#[ignore]
 #[test]
 fn test_remove_person_after_reaching_destination() {
     let mut fleet = Fleet::new(3);
@@ -66,6 +68,7 @@ fn test_remove_person_after_reaching_destination() {
 
 // test that should panic because when a new person is trying to request cab
 // it should throw an error because it is unable to find an empty cab
+#[ignore]
 #[test]
 #[should_panic]
 fn test_failure_when_all_cabs_occupied() {

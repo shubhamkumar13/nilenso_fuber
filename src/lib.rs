@@ -1,3 +1,7 @@
+pub mod api;
+pub mod models;
+pub mod repository;
+
 use rand;
 use rand::{distributions::Alphanumeric, Rng};
 use rocket::UriDisplayPath;
