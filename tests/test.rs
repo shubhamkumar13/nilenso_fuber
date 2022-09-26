@@ -1,3 +1,5 @@
+// [DEPRECATED TESTS]
+
 use fuber::{generate_random_string, Cab, Fleet, Person, Point};
 
 // test if the `request_cab` function is actually
