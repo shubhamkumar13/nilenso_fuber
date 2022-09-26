@@ -677,6 +677,18 @@ Let's start with `/person` function calls
 ### Tests
 The following are not api calls just the description of the function which runs unit tests. The tests are made using the specifications.
 
+To run the tests inside the root directory use `cargo test`. If all the tests pass the following line show up.
+```bash
+     Running tests/api_test.rs (target/debug/deps/api_test-7ee2d6439d41dd70)
+
+running 3 tests
+test test_request_cab_panic_when_fleet_occupied - should panic ... ok
+test test_assign_cab_panic - should panic ... ok
+test test_get_nearest_cab ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.44s
+```
+
 1. `tests/api_test/test_get_nearest_cab` : Tests if the `person/request_cab/<person_id>` assigned the cab nearest to it's location by manually finding the nearest cab and comparing if they both are the same.
 2. `tests/api_test/test_assign_cab_panic` : Panic tests if a cab of cab_id is already assigned to a person of person_id and another person is forced to assign to the already assigned cab then it panics. And it is expected to panic to make sure that the tests pass.
 3. `tests/api_test/test_request_cab_panic_when_fleet_occupied` : Panic tests if a fleet which is already occupied (in this case a fleet of size 3 with 3 people) and if another person tries to request a cab it panics and returns an error. This is expected to panic so that tests pass.
