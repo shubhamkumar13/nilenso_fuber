@@ -53,17 +53,28 @@
     ```bash
         |___ src
               |___ api
+                    |___ cab_api.rs
+                    |___ person_api.rs
+                    |___ mod.rs
               |___ models
+                    |___ mod.rs
+                    |___ cab_model.rs
+                    |___ person_model.rs
+                    |___ point_model.rs
               |___ repository
+                    |___ mod.rs
+                    |___ mongodb_repos.rs
               |___ lib.rs
               |___ main.rs
         |___ target
         |___ tests
+              |___ test.rs
+              |___ api_test.rs
         |___ .env
         |___ .gitignore
         |___ Cargo.lock
         |___ Cargo.toml
-        
+        |___ README.md
     ```
    `main.rs` is where the server is `lib.rs` is a deprecated library which was initially used but was then modularized in the `src/api`, `src/models` and `src/repository` directories.
 
