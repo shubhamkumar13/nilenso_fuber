@@ -1,5 +1,20 @@
+pub mod api;
+pub mod models;
+pub mod repository;
+
 use rand;
+use rand::{distributions::Alphanumeric, Rng};
+use rocket::UriDisplayPath;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+pub fn generate_random_string() -> String {
+    rand::thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(7)
+        .map(char::from)
+        .collect()
+}
 
 // A TL;DR for non-rust users what #[derive(Debug, CLone, PartialEq ...)] does :
 
@@ -41,7 +56,7 @@ use std::collections::HashMap;
 // Reference : https://doc.rust-lang.org/std/hash/trait.Hash.html
 
 // Point struct to abstract the nitty gritty stuff for locations
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Point {
     x: i64,
     y: i64,
@@ -62,7 +77,7 @@ impl Point {
         ((x_sq + y_sq) as f64).sqrt()
     }
 
-    fn create_random_point() -> Self {
+    pub fn create_random_point() -> Self {
         let x = rand::random::<i8>() as i64;
         let y = rand::random::<i8>() as i64;
         Point::new(x, y)
@@ -89,7 +104,7 @@ impl Point {
 }
 
 // Struct Cab to encapsulate what info a cab should be have
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Cab {
     id: usize,
     location: Point,
@@ -122,9 +137,10 @@ impl Cab {
 }
 
 // Very similar struct for Person and Cab which can be generalized further
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Person {
     id: usize,
+    name: String,
     location: Point,
     destination: Point,
 }
@@ -132,9 +148,10 @@ pub struct Person {
 // all the methods are public because we want the Person instance
 // to access all it's methods and not Fleet or Cab's
 impl Person {
-    pub fn new(id: usize, location: Point, destination: Point) -> Self {
+    pub fn new(id: usize, name: String, location: Point, destination: Point) -> Self {
         Person {
             id,
+            name,
             location,
             destination,
         }
