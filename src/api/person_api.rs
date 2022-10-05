@@ -73,38 +73,35 @@ pub fn request_cab(
         // find the nearest cab in the fleet from the person
         let mut nearest_cab = fleet
             .into_iter()
+            .filter(|x| is_free((*x).clone()).is_ok())
             .reduce(|c1, c2| person.nearest_cab(&c1, &c2))
             .and_then(|x| Some(x.clone()))
             .expect("Unable to get the nearest cab");
         // check if the cab is assigned or not
-        match is_free(nearest_cab.clone()) {
-            Ok(_) => {
-                // update cab destination and person_id
-                nearest_cab.update_destination(Some(person.location.clone()));
-                nearest_cab.update_person_id(ObjectId::parse_str(person_id).ok());
-                // update cab by using `assign_person`
-                let cab_id = match nearest_cab.id {
-                    Some(obj_id) => obj_id.to_hex(),
-                    None => panic!("cannot get the cab id"),
-                };
-                let update_result = db.assign_person(&cab_id, nearest_cab.clone());
-                // return result as person and cab tuple
-                match update_result {
-                    Ok(update) => {
-                        if update.matched_count == 1 {
-                            let updated_cab_info = db.get_cab(&cab_id);
-                            match updated_cab_info {
-                                Ok(cab) => Ok(Json((person, cab))),
-                                Err(_) => Err(Status::InternalServerError),
-                            }
-                        } else {
-                            Err(Status::NotFound)
-                        }
+
+        // update cab destination and person_id
+        nearest_cab.update_destination(Some(person.location.clone()));
+        nearest_cab.update_person_id(ObjectId::parse_str(person_id).ok());
+        // update cab by using `assign_person`
+        let cab_id = match nearest_cab.id {
+            Some(obj_id) => obj_id.to_hex(),
+            None => panic!("cannot get the cab id"),
+        };
+        let update_result = db.assign_person(&cab_id, nearest_cab.clone());
+        // return result as person and cab tuple
+        match update_result {
+            Ok(update) => {
+                if update.matched_count == 1 {
+                    let updated_cab_info = db.get_cab(&cab_id);
+                    match updated_cab_info {
+                        Ok(cab) => Ok(Json((person, cab))),
+                        Err(_) => Err(Status::InternalServerError),
                     }
-                    Err(_) => Err(Status::InternalServerError),
+                } else {
+                    Err(Status::NotFound)
                 }
             }
-            Err(e) => Err(e),
+            Err(_) => Err(Status::InternalServerError),
         }
     }
 }
